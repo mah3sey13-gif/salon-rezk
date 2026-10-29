@@ -67,6 +67,17 @@ export function isValidEgyptianPhone(phone: string): boolean {
   return /^01[0125][0-9]{8}$/.test(normalized) || /^\d{11}$/.test(normalized);
 }
 
+export function getWhatsAppUrl(phone: string): string {
+  const norm = normalizePhoneNumber(phone);
+  let clean = norm.replace(/\D/g, "");
+  if (clean.startsWith("0")) {
+    clean = "2" + clean;
+  } else if (!clean.startsWith("20") && clean.length === 10) {
+    clean = "20" + clean;
+  }
+  return `https://wa.me/${clean}`;
+}
+
 export interface DayInfo {
   date: string;
   dayOfWeek: number;
