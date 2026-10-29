@@ -70,6 +70,11 @@ export default function BookDatePage() {
       const res = await fetch(`/api/days?date=${dateStr}`);
       if (res.ok) {
         const data = await res.json();
+        if (data.is_closed) {
+          setError(`هذا اليوم مغلق: ${data.close_reason || "إجازة الصالون الأسبوعية"}`);
+          setSlots([]);
+          return;
+        }
         setSlots(data.slots || []);
         // Automatically preselect first available slot
         const firstAvail = (data.slots || []).find((s: SlotItem) => s.available);

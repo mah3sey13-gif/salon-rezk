@@ -12,8 +12,13 @@ export async function GET(req: Request) {
 
     // If a specific date is requested, return the available/booked hourly slots for that day
     if (dateParam) {
+      const parts = dateParam.split("-").map(Number);
+      const dObj = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+      const isMondayDefault = dObj.getDay() === 1;
+
       const daySetting = db.day_settings[dateParam];
-      const isClosed = daySetting?.is_closed ?? false;
+      const isClosed = daySetting?.is_closed !== undefined ? daySetting.is_closed : isMondayDefault;
+      const closeReason = daySetting?.close_reason || (isClosed && isMondayDefault ? "مغلق أسبوعياً" : null);
 
       const activeBookings = db.bookings.filter(
         (b) =>
@@ -34,7 +39,7 @@ export async function GET(req: Request) {
       return NextResponse.json({
         date: dateParam,
         is_closed: isClosed,
-        close_reason: daySetting?.close_reason || null,
+        close_reason: closeReason,
         slots,
       });
     }
@@ -80,8 +85,9 @@ export async function GET(req: Request) {
 
     const activeDays = nextDays.map((d) => {
       const setting = db.day_settings[d.date];
-      const isClosed = setting?.is_closed ?? false;
-      const closeReason = setting?.close_reason || null;
+      const isMondayDefault = d.dayOfWeek === 1 || d.isMonday;
+      const isClosed = setting?.is_closed !== undefined ? setting.is_closed : isMondayDefault;
+      const closeReason = setting?.close_reason || (isClosed && isMondayDefault ? "مغلق أسبوعياً" : null);
 
       const dayBookings = db.bookings.filter(
         (b) => b.booking_date === d.date && (b.status === "active" || b.status === "rescheduled")

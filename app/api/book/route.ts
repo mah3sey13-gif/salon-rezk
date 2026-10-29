@@ -40,11 +40,16 @@ export async function POST(req: Request) {
 
     const db = getDb();
 
-    // Check if day is closed
+    // Check if day is closed (Monday is weekly day off by default)
+    const parts = bookingDate.split("-").map(Number);
+    const dObj = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+    const isMondayDefault = dObj.getDay() === 1;
+
     const daySetting = db.day_settings[bookingDate];
-    if (daySetting?.is_closed) {
+    const isClosed = daySetting?.is_closed !== undefined ? daySetting.is_closed : isMondayDefault;
+    if (isClosed) {
       return NextResponse.json(
-        { success: false, error: `هذا اليوم مغلق: ${daySetting.close_reason || "ظرف طارئ"}` },
+        { success: false, error: `هذا اليوم مغلق: ${daySetting?.close_reason || (isMondayDefault ? "مغلق أسبوعياً (إجازة الصالون)" : "ظرف طارئ")}` },
         { status: 400 }
       );
     }

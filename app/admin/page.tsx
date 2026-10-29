@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Scissors,
   Phone,
@@ -10,7 +11,6 @@ import {
   AlertTriangle,
   PenLine,
   ArrowRightLeft,
-  Power,
   Trash2,
   Megaphone,
   RefreshCw,
@@ -19,8 +19,22 @@ import {
   ShieldCheck,
   RotateCcw,
   Clock,
+  Archive,
+  CalendarClock,
+  Layers,
+  Search,
+  ChevronRight,
+  Home,
 } from "lucide-react";
-import { normalizePhoneNumber, isValidEgyptianPhone, TIME_SLOTS } from "@/lib/utils";
+import {
+  normalizePhoneNumber,
+  isValidEgyptianPhone,
+  TIME_SLOTS,
+  formatArabicDate,
+  formatDateToIso,
+  getNowCairo,
+  DAY_NAMES_AR,
+} from "@/lib/utils";
 
 interface DayTabItem {
   date: string;
@@ -110,6 +124,29 @@ export default function AdminPage() {
 
   const [closingDayDate, setClosingDayDate] = useState<string | null>(null);
   const [closeReasonInput, setCloseReasonInput] = useState("");
+
+  // Archive state
+  const [currentView, setCurrentView] = useState<"dashboard" | "archive">("dashboard");
+  const [allArchiveBookings, setAllArchiveBookings] = useState<BookingItem[]>([]);
+  const [selectedArchiveDate, setSelectedArchiveDate] = useState<string>("all");
+  const [archiveFilter, setArchiveFilter] = useState<"all" | "active" | "completed" | "cancelled">("all");
+  const [archiveSearch, setArchiveSearch] = useState<string>("");
+  const [archiveLoading, setArchiveLoading] = useState<boolean>(false);
+
+  const loadArchiveData = async () => {
+    setArchiveLoading(true);
+    try {
+      const res = await fetch("/api/admin/bookings?archive=true");
+      if (res.ok) {
+        const data = await res.json();
+        setAllArchiveBookings(data.bookings || []);
+      }
+    } catch (err) {
+      console.error("Error loading archive bookings:", err);
+    } finally {
+      setArchiveLoading(false);
+    }
+  };
 
   const showToast = (msg: string, isError = false) => {
     if (isError) {
@@ -478,6 +515,345 @@ export default function AdminPage() {
   const cancelledBookings =
     dayData?.bookings.filter((b) => b.status === "cancelled") || [];
 
+  // Archive calculations
+  const now = getNowCairo();
+  const todayIso = formatDateToIso(now);
+  const allPastBookings = allArchiveBookings.filter((b) => b.booking_date < todayIso);
+
+  const pastDatesSet = new Set<string>();
+  allPastBookings.forEach((b) => {
+    if (b.booking_date) pastDatesSet.add(b.booking_date);
+  });
+  for (let i = 1; i <= 15; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i, 12, 0, 0);
+    pastDatesSet.add(formatDateToIso(d));
+  }
+  const sortedPastDates = Array.from(pastDatesSet).sort((a, b) => b.localeCompare(a));
+
+  const yesterdayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12, 0, 0);
+  const yesterdayIso = formatDateToIso(yesterdayDate);
+
+  const pastDaysList = sortedPastDates.map((dateStr) => {
+    const parts = dateStr.split("-").map(Number);
+    const d = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+    const dayBookings = allArchiveBookings.filter((b) => b.booking_date === dateStr);
+    return {
+      date: dateStr,
+      dayNameAr: DAY_NAMES_AR[d.getDay()] || "",
+      formattedDateAr: formatArabicDate(dateStr),
+      isYesterday: dateStr === yesterdayIso,
+      totalBooked: dayBookings.length,
+      bookings: dayBookings,
+    };
+  });
+
+  const selectedDayObj = pastDaysList.find((d) => d.date === selectedArchiveDate);
+
+  let currentArchiveBookings: BookingItem[] = [];
+  if (selectedArchiveDate === "all") {
+    currentArchiveBookings = [...allPastBookings].reverse();
+  } else {
+    currentArchiveBookings = allArchiveBookings
+      .filter((b) => b.booking_date === selectedArchiveDate)
+      .sort((a, b) => (a.time_slot || "").localeCompare(b.time_slot || ""));
+  }
+
+  const q = archiveSearch.trim().toLowerCase();
+  const filteredArchiveBookings = currentArchiveBookings.filter((b) => {
+    if (archiveFilter === "active" && !(b.status === "active" || b.status === "rescheduled")) return false;
+    if (archiveFilter === "completed" && b.status !== "completed") return false;
+    if (archiveFilter === "cancelled" && b.status !== "cancelled") return false;
+
+    if (q) {
+      const matchName = (b.customer_name || "").toLowerCase().includes(q);
+      const matchPhone = (b.customer_phone || "").includes(q);
+      const matchSlot = (b.time_slot_label || "").includes(q);
+      return matchName || matchPhone || matchSlot;
+    }
+    return true;
+  });
+
+  if (currentView === "archive") {
+    return (
+      <div className="space-y-6 pb-20 max-w-2xl mx-auto animate-in fade-in duration-200">
+        {/* Archive Header */}
+        <header className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+          <button
+            onClick={() => setCurrentView("dashboard")}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-xs md:text-sm font-bold transition cursor-pointer"
+          >
+            <ChevronRight className="w-4 h-4 text-emerald-400" />
+            <span>الرجوع لجدول اليوم</span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 transition cursor-pointer"
+              title="زيارة موقع الزبائن"
+            >
+              <Home className="w-5 h-5" />
+            </Link>
+          </div>
+        </header>
+
+        {/* Archive Banner */}
+        <div className="p-5 rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 flex items-center justify-between shadow-lg relative overflow-hidden">
+          <div className="space-y-1 relative z-10">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <Archive className="w-4 h-4" />
+              </div>
+              <h1 className="text-xl md:text-2xl font-black text-white">أرشيف الأيام السابقة</h1>
+            </div>
+            <p className="text-xs text-zinc-400">اختر أي يوم سابق من القائمة بالأعلى لعرض مواعيده وحجوزاته</p>
+          </div>
+          <div className="text-left relative z-10">
+            <span className="text-2xl md:text-3xl font-black text-emerald-400 font-mono">{allPastBookings.length}</span>
+            <p className="text-[10px] text-zinc-400 font-semibold">حجوزات سابقة</p>
+          </div>
+        </div>
+
+        {/* Past Days Horizontal Scroll Bar (الأيام اللي ورا) */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs text-zinc-400 font-semibold px-1">
+            <span className="flex items-center gap-1.5 text-zinc-300">
+              <CalendarClock className="w-3.5 h-3.5 text-emerald-400" />
+              <span>قائمة الأيام السابقة (اضغط على اليوم):</span>
+            </span>
+            <span className="text-xs text-zinc-400 font-mono">{pastDaysList.length} يوم</span>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar scroll-smooth">
+            {pastDaysList.map((d) => {
+              const isSel = selectedArchiveDate === d.date;
+              return (
+                <button
+                  key={d.date}
+                  onClick={() => {
+                    setSelectedArchiveDate(d.date);
+                    setArchiveSearch("");
+                  }}
+                  className={`flex-shrink-0 px-4 py-3 rounded-2xl border text-right transition cursor-pointer min-w-[115px] ${
+                    isSel
+                      ? "bg-emerald-950/70 border-emerald-500 text-white shadow-md shadow-emerald-950/50 ring-1 ring-emerald-500/40"
+                      : "bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-sm text-white">{d.dayNameAr}</span>
+                    {d.isYesterday ? (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-950/80 text-amber-300 border border-amber-800 font-bold">
+                        أمس
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-zinc-500 font-medium">سابق</span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-zinc-400 mb-1.5">
+                    {d.formattedDateAr.split(" ").slice(1).join(" ")}
+                  </div>
+                  <div className="text-[11px] font-bold">
+                    {d.totalBooked > 0 ? (
+                      <span className={isSel ? "text-emerald-300" : "text-emerald-400"}>
+                        {d.totalBooked} حجز
+                      </span>
+                    ) : (
+                      <span className="text-zinc-600">فاضي (0)</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+
+            {/* All Past Days Tab */}
+            <button
+              onClick={() => {
+                setSelectedArchiveDate("all");
+                setArchiveSearch("");
+              }}
+              className={`flex-shrink-0 px-4 py-3 rounded-2xl border text-right transition cursor-pointer min-w-[115px] ${
+                selectedArchiveDate === "all"
+                  ? "bg-emerald-950/70 border-emerald-500 text-white shadow-md shadow-emerald-950/50 ring-1 ring-emerald-500/40"
+                  : "bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-bold text-sm text-white">كل الأيام</span>
+                <Layers className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <div className="text-[11px] text-zinc-400 mb-1.5">أرشيف مجمع</div>
+              <div className="text-[11px] font-bold text-emerald-400">
+                {allPastBookings.length} حجز
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Selected Day Overview Card */}
+        <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
+                <span>
+                  {selectedArchiveDate === "all"
+                    ? "عرض كل الأيام السابقة مجمعة"
+                    : selectedDayObj?.formattedDateAr || selectedArchiveDate}
+                </span>
+                {selectedDayObj?.isYesterday && (
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-800">
+                    أمس
+                  </span>
+                )}
+              </h2>
+              <p className="text-xs text-zinc-400">
+                {selectedArchiveDate === "all"
+                  ? `إجمالي الحجوزات السابقة: ${allPastBookings.length} حجز`
+                  : `الحجوزات المسجلة في هذا اليوم: ${currentArchiveBookings.length} حجز`}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800 text-emerald-400 font-mono font-bold">
+                {currentArchiveBookings.length} حجز
+              </span>
+            </div>
+          </div>
+
+          {/* Search Bar inside Selected Day */}
+          <div className="relative pt-1 border-t border-zinc-800/80">
+            <input
+              type="text"
+              value={archiveSearch}
+              onChange={(e) => setArchiveSearch(e.target.value)}
+              placeholder="ابحث باسم الزبون أو رقم التليفون أو الساعة..."
+              className="w-full h-11 pr-10 pl-16 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-500 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition"
+            />
+            <div className="absolute right-3 top-[17px] text-zinc-400 pointer-events-none">
+              <Search className="w-4 h-4" />
+            </div>
+            {archiveSearch && (
+              <button
+                onClick={() => setArchiveSearch("")}
+                className="absolute left-2.5 top-[14px] text-[11px] bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-2 py-0.5 rounded-lg cursor-pointer"
+              >
+                مسح
+              </button>
+            )}
+          </div>
+
+          {/* Quick Filter Badges */}
+          <div className="flex gap-2 text-xs font-semibold overflow-x-auto pb-0.5 no-scrollbar">
+            <button
+              onClick={() => setArchiveFilter("all")}
+              className={`px-3 py-1 rounded-lg border transition cursor-pointer ${
+                archiveFilter === "all"
+                  ? "bg-emerald-600 text-white border-emerald-500"
+                  : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              الكل ({currentArchiveBookings.length})
+            </button>
+            <button
+              onClick={() => setArchiveFilter("completed")}
+              className={`px-3 py-1 rounded-lg border transition cursor-pointer ${
+                archiveFilter === "completed"
+                  ? "bg-blue-950 text-blue-300 border-blue-600 font-bold"
+                  : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              تم الحلاقة ({currentArchiveBookings.filter((b) => b.status === "completed").length})
+            </button>
+            <button
+              onClick={() => setArchiveFilter("active")}
+              className={`px-3 py-1 rounded-lg border transition cursor-pointer ${
+                archiveFilter === "active"
+                  ? "bg-emerald-950 text-emerald-300 border-emerald-600 font-bold"
+                  : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              نشط ({currentArchiveBookings.filter((b) => b.status === "active" || b.status === "rescheduled").length})
+            </button>
+            <button
+              onClick={() => setArchiveFilter("cancelled")}
+              className={`px-3 py-1 rounded-lg border transition cursor-pointer ${
+                archiveFilter === "cancelled"
+                  ? "bg-rose-950 text-rose-300 border-rose-600 font-bold"
+                  : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              ملغي ({currentArchiveBookings.filter((b) => b.status === "cancelled").length})
+            </button>
+          </div>
+        </div>
+
+        {/* Bookings List */}
+        <div className="space-y-2.5">
+          {archiveLoading ? (
+            <div className="p-8 text-center text-zinc-400 text-xs">جاري تحميل الأرشيف...</div>
+          ) : filteredArchiveBookings.length === 0 ? (
+            <div className="p-8 text-center rounded-2xl bg-zinc-900/40 border border-zinc-800/60 text-zinc-500 text-sm">
+              {archiveSearch
+                ? "مفيش نتائج بحث مطابقة يا صاحبي"
+                : "لا توجد حجوزات مسجلة في هذا اليوم"}
+            </div>
+          ) : (
+            filteredArchiveBookings.map((b) => (
+              <div
+                key={b.id}
+                className="p-3.5 rounded-2xl border bg-zinc-900/80 border-zinc-800 flex items-center justify-between gap-3 shadow-xs"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-16 text-center font-bold font-mono text-xs px-2 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-emerald-400 shrink-0">
+                    {b.time_slot_label || b.time_slot}
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-white">{b.customer_name}</span>
+                      {selectedArchiveDate === "all" && (
+                        <span className="text-[10px] text-zinc-400 font-mono">
+                          ({formatArabicDate(b.booking_date)})
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs font-mono text-zinc-400" dir="ltr">
+                      {b.customer_phone}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {b.status === "completed" && (
+                    <span className="text-[11px] px-2.5 py-1 rounded-lg bg-blue-950/80 text-blue-300 border border-blue-800 font-semibold">
+                      تم الحلاقة ✓
+                    </span>
+                  )}
+                  {(b.status === "active" || b.status === "rescheduled") && (
+                    <span className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-semibold">
+                      حجز مؤكد
+                    </span>
+                  )}
+                  {b.status === "cancelled" && (
+                    <span className="text-[11px] px-2.5 py-1 rounded-lg bg-rose-950/80 text-rose-300 border border-rose-800 font-semibold">
+                      ملغي ✕
+                    </span>
+                  )}
+                  <a
+                    href={`tel:${b.customer_phone}`}
+                    className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-emerald-400 transition"
+                    title="اتصال بالزبون"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-20 max-w-2xl mx-auto">
       {/* Header */}
@@ -498,10 +874,22 @@ export default function AdminPage() {
               setShowPasswordModal(true);
               setPasswordMsg(null);
             }}
-            className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-zinc-800 transition cursor-pointer"
+            className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-amber-400 border border-zinc-800 transition cursor-pointer"
             title="تغيير كلمة السر"
           >
             <KeyRound className="w-5 h-5" />
+          </button>
+
+          {/* Archive button */}
+          <button
+            onClick={() => {
+              setCurrentView("archive");
+              loadArchiveData();
+            }}
+            className="p-2.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-400 border border-emerald-800/50 transition cursor-pointer"
+            title="الأرشيف الكامل للحجوزات"
+          >
+            <Archive className="w-5 h-5" />
           </button>
 
           {/* Announcements modal button */}
@@ -514,15 +902,6 @@ export default function AdminPage() {
             {announcements.some((a) => a.is_active) && (
               <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
             )}
-          </button>
-
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-rose-400 border border-zinc-800 transition cursor-pointer"
-            title="تسجيل الخروج"
-          >
-            <Power className="w-5 h-5" />
           </button>
         </div>
       </header>

@@ -8,15 +8,27 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const date = searchParams.get("date");
+    const isArchive = searchParams.get("archive") === "true" || date === "all";
+
+    const db = getDb();
+
+    if (isArchive) {
+      return NextResponse.json({
+        bookings: db.bookings || [],
+        totalBookings: (db.bookings || []).length,
+      });
+    }
 
     if (!date) {
       return NextResponse.json({ error: "Date is required" }, { status: 400 });
     }
+    const parts = date.split("-").map(Number);
+    const dObj = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+    const isMondayDefault = dObj.getDay() === 1;
 
-    const db = getDb();
     const daySetting = db.day_settings[date];
-    const isClosed = daySetting?.is_closed ?? false;
-    const closeReason = daySetting?.close_reason || null;
+    const isClosed = daySetting?.is_closed !== undefined ? daySetting.is_closed : isMondayDefault;
+    const closeReason = daySetting?.close_reason || (isClosed && isMondayDefault ? "مغلق أسبوعياً" : null);
 
     const dayBookings = db.bookings.filter((b) => b.booking_date === date);
 
