@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const db = getDb();
+    const db = await getDb();
     const customerBookings = db.bookings
       .filter((b) => b.customer_phone === normalizedPhone)
       .sort((a, b) => b.booking_date.localeCompare(a.booking_date));

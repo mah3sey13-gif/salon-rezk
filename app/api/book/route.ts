@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const db = getDb();
+    const db = await getDb();
 
     // Check if day is closed (Monday is weekly day off by default)
     const parts = bookingDate.split("-").map(Number);
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
     };
 
     db.bookings.push(newBooking);
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({
       success: true,

@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { currentPassword, newPassword, confirmPassword } = body;
 
-    const db = getDb();
+    const db = await getDb();
 
     if (!currentPassword || !newPassword || !confirmPassword) {
       return NextResponse.json(
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     }
 
     db.admin_pin = newPassword.trim();
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({ success: true });
   } catch (error) {

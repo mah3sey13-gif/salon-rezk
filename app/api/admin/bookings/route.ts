@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     const date = searchParams.get("date");
     const isArchive = searchParams.get("archive") === "true" || date === "all";
 
-    const db = getDb();
+    const db = await getDb();
 
     if (isArchive) {
       return NextResponse.json({
@@ -71,7 +71,7 @@ export async function PATCH(req: Request) {
   try {
     const body = await req.json();
     const { action } = body;
-    const db = getDb();
+    const db = await getDb();
 
     if (action === "status") {
       const { id, status } = body;
@@ -81,7 +81,7 @@ export async function PATCH(req: Request) {
       }
 
       booking.status = status;
-      saveDb(db);
+      await saveDb(db);
       return NextResponse.json({ success: true });
     }
 
@@ -131,7 +131,7 @@ export async function PATCH(req: Request) {
         booking.admin_notes = adminNotes;
       }
 
-      saveDb(db);
+      await saveDb(db);
       return NextResponse.json({ success: true });
     }
 
@@ -167,7 +167,7 @@ export async function PATCH(req: Request) {
       }
       booking.status = "rescheduled";
 
-      saveDb(db);
+      await saveDb(db);
       return NextResponse.json({ success: true });
     }
 
@@ -187,9 +187,9 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ success: false, error: "Date is required" }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     db.bookings = db.bookings.filter((b) => b.booking_date !== date);
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({ success: true });
   } catch (error) {

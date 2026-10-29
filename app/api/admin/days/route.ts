@@ -12,14 +12,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "التاريخ مطلوب" }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     db.day_settings[bookingDate] = {
       date: bookingDate,
       is_closed: Boolean(isClosed),
       close_reason: reason || undefined,
     };
 
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({ success: true });
   } catch (error) {

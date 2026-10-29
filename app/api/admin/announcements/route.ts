@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const db = getDb();
+    const db = await getDb();
     return NextResponse.json({
       announcements: db.announcements || [],
     });
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { id, message, isActive } = body;
-    const db = getDb();
+    const db = await getDb();
 
     if (!db.announcements) {
       db.announcements = [];
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       if (existing) {
         if (message !== undefined) existing.message = message;
         if (isActive !== undefined) existing.is_active = isActive;
-        saveDb(db);
+        await saveDb(db);
         return NextResponse.json({ success: true, announcement: existing });
       }
     }
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     };
 
     db.announcements.unshift(newAnnouncement);
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({ success: true, announcement: newAnnouncement });
   } catch (error) {
@@ -66,9 +66,9 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ success: false, error: "ID مطلوب" }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     db.announcements = db.announcements.filter((a) => a.id !== id);
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({ success: true });
   } catch (error) {

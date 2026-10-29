@@ -8,7 +8,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const dateParam = searchParams.get("date");
-    const db = getDb();
+    const db = await getDb();
 
     // If a specific date is requested, return the available/booked hourly slots for that day
     if (dateParam) {

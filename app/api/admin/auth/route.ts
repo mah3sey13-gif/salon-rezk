@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const pin = (body.pin || "").trim();
 
-    const db = getDb();
+    const db = await getDb();
 
     if (pin === db.admin_pin) {
       const response = NextResponse.json({ success: true });
