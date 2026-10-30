@@ -97,14 +97,15 @@ export default function AppDownloadButtons() {
       {showIOSModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#18181b] border border-zinc-700 text-white rounded-3xl p-5 max-w-sm w-full shadow-2xl relative animate-in slide-in-from-bottom-6 duration-300">
+            {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg overflow-hidden border border-emerald-500/30 bg-black flex items-center justify-center flex-shrink-0">
                   <img src="/icon-192.png" alt="صالون رزق" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-white">تثبيت تطبيق صالون رزق على الآيفون</h3>
-                  <p className="text-[11px] text-zinc-400">في ثانيتين فقط وبدون App Store</p>
+                  <h3 className="font-bold text-sm text-white">تثبيت تطبيق صالون رزق للآيفون</h3>
+                  <p className="text-[11px] text-zinc-400">تثبيت مباشر كملف رسمي بدون متجر</p>
                 </div>
               </div>
               <button
@@ -115,50 +116,65 @@ export default function AppDownloadButtons() {
               </button>
             </div>
 
+            {/* Steps & Direct Action */}
             <div className="space-y-3 my-4">
+              {/* Step 1 */}
               <div className="flex items-start gap-3 bg-zinc-900/80 p-3 rounded-2xl border border-zinc-800/80">
                 <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
                   1
                 </div>
                 <div className="text-xs">
                   <p className="text-zinc-200 font-medium">
-                    اضغط زرار <span className="bg-zinc-800 text-emerald-400 px-1.5 py-0.5 rounded font-semibold border border-zinc-700">المشاركة ⬆️</span> في أسفل سفاري
+                    اضغط الزرار الأخضر بالأسفل لتنزيل ملف التثبيت
                   </p>
-                  <p className="text-[11px] text-zinc-400 mt-1">علامة المربع اللي طالع منه سهم في نص الشاشة تحت</p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    الآيفون هيسألك: اضغط <span className="text-emerald-400 font-bold">"سماح" (Allow)</span>
+                  </p>
                 </div>
               </div>
 
+              {/* Step 2 */}
               <div className="flex items-start gap-3 bg-zinc-900/80 p-3 rounded-2xl border border-zinc-800/80">
                 <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
                   2
                 </div>
                 <div className="text-xs">
                   <p className="text-zinc-200 font-medium">
-                    انزل واختار <span className="bg-zinc-800 text-emerald-400 px-1.5 py-0.5 rounded font-semibold border border-zinc-700">إضافة إلى الصفحة الرئيسية ➕</span>
+                    افتح <span className="text-emerald-400 font-bold">إعدادات الآيفون (Settings)</span>
                   </p>
-                  <p className="text-[11px] text-zinc-400 mt-1">(أو Add to Home Screen)</p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    هتلاقي أول سطر فوق خالص: <span className="bg-zinc-800 text-zinc-200 px-1.5 py-0.5 rounded font-semibold border border-zinc-700">تم تنزيل ملف التعريف (Profile Downloaded)</span>
+                  </p>
                 </div>
               </div>
 
+              {/* Step 3 */}
               <div className="flex items-start gap-3 bg-zinc-900/80 p-3 rounded-2xl border border-zinc-800/80">
                 <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
                   3
                 </div>
                 <div className="text-xs">
                   <p className="text-zinc-200 font-medium">
-                    اضغط فوق على اليمين كلمة <span className="text-emerald-400 font-bold">"إضافة" (Add)</span>
+                    اضغط <span className="text-emerald-400 font-bold">"تثبيت" (Install)</span>
                   </p>
-                  <p className="text-[11px] text-zinc-400 mt-1">مبروك! 🎉 التطبيق هينزل على شاشة موبايلك كبرنامج كامل بالأيقونة الملكية.</p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    مبروك! 🎉 التطبيق هينزل على شاشة موبايلك الرئيسية بأيقونة صالون رزق.
+                  </p>
                 </div>
               </div>
             </div>
 
-            <button
-              onClick={() => setShowIOSModal(false)}
-              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-zinc-950 font-bold text-sm py-3 rounded-xl shadow-lg transition-all active:scale-[0.98]"
+            {/* Direct Download Button */}
+            <a
+              href="/api/ios-profile"
+              onClick={() => {
+                setTimeout(() => setShowIOSModal(false), 2000);
+              }}
+              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-zinc-950 font-bold text-sm py-3.5 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
             >
-              فهمت يا صاحبي، هثبته دلوقتي! ✅
-            </button>
+              <Download className="w-4 h-4" />
+              <span>ابدأ تثبيت التطبيق الآن 🍏</span>
+            </a>
           </div>
         </div>
       )}
