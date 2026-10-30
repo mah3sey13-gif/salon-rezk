@@ -40,7 +40,6 @@ export default function AppDownloadButtons() {
             <span>تطبيق صالون رزق الرسمي</span>
           </div>
           <h4 className="font-bold text-white text-sm">نزّل التطبيق على تليفونك لحجز أسرع</h4>
-          <p className="text-[11px] text-zinc-400">بدون لف ودوران، يشتغل على الآيفون والأندرويد بضغطة واحدة</p>
         </div>
 
         {/* The Two Download Buttons */}
