@@ -44,6 +44,7 @@ export default function InstallBanner() {
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      (window as any).__salonDeferredPrompt = e;
       setShowBanner(true);
     };
 

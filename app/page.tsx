@@ -13,6 +13,7 @@ import {
   XCircle,
   MessageCircle,
 } from "lucide-react";
+import AppDownloadButtons from "@/components/AppDownloadButtons";
 
 interface DayItem {
   date: string;
@@ -180,6 +181,9 @@ export default function HomePage() {
           })}
         </div>
       )}
+
+      {/* App Download Buttons for Apple iOS and Android */}
+      <AppDownloadButtons />
 
       {/* Footer */}
       <footer className="pt-6 border-t border-zinc-900 text-center space-y-4">
