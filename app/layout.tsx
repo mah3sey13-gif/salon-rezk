@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Cairo } from "next/font/google";
 import "./globals.css";
+import InstallBanner from "@/components/InstallBanner";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -17,6 +18,11 @@ export const metadata: Metadata = {
   icons: {
     icon: "/icon-192.png",
     apple: "/icon-192.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "صالون رزق",
   },
 };
 
@@ -42,11 +48,26 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className={`${cairo.className} min-h-screen bg-[#09090b] text-[#fafafa] flex flex-col font-sans selection:bg-emerald-500/20 selection:text-emerald-300`}>
         <main className="flex-1 w-full max-w-md mx-auto px-4 py-6 md:py-10">
           {children}
         </main>
+        <InstallBanner />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                    console.log('SW registration failed: ', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
