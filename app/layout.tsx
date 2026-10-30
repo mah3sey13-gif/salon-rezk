@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cairo } from "next/font/google";
 import "./globals.css";
-import InstallBanner from "@/components/InstallBanner";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -54,16 +53,21 @@ export default function RootLayout({
         <main className="flex-1 w-full max-w-md mx-auto px-4 py-6 md:py-10">
           {children}
         </main>
-        <InstallBanner />
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
-                    console.log('SW registration failed: ', err);
-                  });
+              if (typeof window !== 'undefined') {
+                window.addEventListener('beforeinstallprompt', function(e) {
+                  e.preventDefault();
+                  window.__salonDeferredPrompt = e;
                 });
+                if ('serviceWorker' in navigator) {
+                  window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                      console.log('SW registration failed: ', err);
+                    });
+                  });
+                }
               }
             `,
           }}

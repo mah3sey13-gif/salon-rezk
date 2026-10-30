@@ -182,9 +182,6 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* App Download Buttons for Apple iOS and Android */}
-      <AppDownloadButtons />
-
       {/* Footer */}
       <footer className="pt-6 border-t border-zinc-900 text-center space-y-4">
         <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 space-y-2.5 text-center text-sm shadow-sm">
@@ -214,7 +211,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="pt-2">
+        {/* App Download Buttons for Apple iOS and Android */}
+        <AppDownloadButtons />
+
+        <div className="pt-1">
           <Link
             href="/admin"
             className="text-[11px] text-zinc-600 hover:text-zinc-400 transition underline underline-offset-4"
