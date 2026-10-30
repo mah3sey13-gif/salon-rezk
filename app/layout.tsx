@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   description: "تطبيق حجز طابور صالون الحلاقة رزق - احجز دورك بضغطة واحدة من موبايلك بدون تعقيد.",
   keywords: ["رزق", "صالون حلاقة", "حجز طابور", "حلاقة رجالي", "مصر"],
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
+  },
 };
 
 export const viewport: Viewport = {
