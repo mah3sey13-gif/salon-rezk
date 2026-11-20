@@ -61,7 +61,7 @@ export async function POST(req: Request) {
 
     if (activeBookings.length >= MAX_CAPACITY) {
       return NextResponse.json(
-        { success: false, error: "عذراً، اكتملت حجوزات هذا اليوم بالكامل (10/10 مواعيد)." },
+        { success: false, error: `عذراً، اكتملت حجوزات هذا اليوم بالكامل (${MAX_CAPACITY}/${MAX_CAPACITY} مواعيد).` },
         { status: 400 }
       );
     }

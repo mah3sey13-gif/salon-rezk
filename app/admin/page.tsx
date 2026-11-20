@@ -954,7 +954,7 @@ export default function AdminPage() {
       {/* Days Tabs Horizontal Scroll */}
       <div className="space-y-2">
         <div className="flex items-center justify-end text-xs text-zinc-400 font-semibold px-1">
-          <span>{dayData?.totalActive || 0} من 10 مواعيد محجوزة</span>
+          <span>{dayData?.totalActive || 0} من {TIME_SLOTS.length} مواعيد محجوزة</span>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar scroll-smooth">
           {days.map((item) => {
@@ -986,11 +986,11 @@ export default function AdminPage() {
                 <div className="text-[11px] font-bold">
                   {item.is_closed ? (
                     <span className="text-zinc-500">مغلق</span>
-                  ) : item.total_booked >= 10 ? (
-                    <span className="text-rose-400">10/10 مكتمل</span>
+                  ) : item.total_booked >= TIME_SLOTS.length ? (
+                    <span className="text-rose-400">{TIME_SLOTS.length}/{TIME_SLOTS.length} مكتمل</span>
                   ) : (
                     <span className={isSelected ? "text-emerald-300" : "text-zinc-300"}>
-                      {item.total_booked} / 10
+                      {item.total_booked} / {TIME_SLOTS.length}
                     </span>
                   )}
                 </div>
@@ -1058,12 +1058,12 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Hourly Schedule Timeline (10 Slots: 3 PM - 12 AM) */}
+      {/* Hourly Schedule Timeline (3 PM - 9 PM) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-sm font-bold text-zinc-200 flex items-center gap-2">
             <Clock className="w-4 h-4 text-emerald-400" />
-            <span>جدول المواعيد بالساعة (10 مواعيد)</span>
+            <span>جدول المواعيد بالساعة ({TIME_SLOTS.length} مواعيد)</span>
           </h3>
           <span className="text-xs text-zinc-400">{dayData?.totalActive || 0} محجوز</span>
         </div>

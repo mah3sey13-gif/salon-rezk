@@ -109,19 +109,16 @@ export function getNext15Days(): DayInfo[] {
 }
 
 export const TIME_SLOTS = [
-  { id: "15:00", label: "03:00 م", time_ar: "03:00 مساءً" },
-  { id: "16:00", label: "04:00 م", time_ar: "04:00 مساءً" },
+  { id: "15:00", label: "03:00 م", time_ar: "03:00 عصراً" },
+  { id: "16:00", label: "04:00 م", time_ar: "04:00 عصراً" },
   { id: "17:00", label: "05:00 م", time_ar: "05:00 مساءً" },
   { id: "18:00", label: "06:00 م", time_ar: "06:00 مساءً" },
   { id: "19:00", label: "07:00 م", time_ar: "07:00 مساءً" },
   { id: "20:00", label: "08:00 م", time_ar: "08:00 مساءً" },
   { id: "21:00", label: "09:00 م", time_ar: "09:00 مساءً" },
-  { id: "22:00", label: "10:00 م", time_ar: "10:00 مساءً" },
-  { id: "23:00", label: "11:00 م", time_ar: "11:00 مساءً" },
-  { id: "00:00", label: "12:00 ص", time_ar: "12:00 منتصف الليل" },
 ];
 
-export const MAX_DAILY_SLOTS = 10;
+export const MAX_DAILY_SLOTS = TIME_SLOTS.length;
 
 export function isWithinSevenDaysWindow(dateStr: string): boolean {
   const days = getNext15Days();

@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { TIME_SLOTS } from "./utils";
 
 export interface Booking {
   id: string;
@@ -111,10 +112,20 @@ function readLocalDb(): SalonDatabase {
   try {
     if (fs.existsSync(DB_FILE)) {
       const content = fs.readFileSync(DB_FILE, "utf-8");
-      return { ...DEFAULT_DB, ...JSON.parse(content) };
+      const parsed = JSON.parse(content);
+      return {
+        ...DEFAULT_DB,
+        ...parsed,
+        admin_pin: parsed.admin_pin ? String(parsed.admin_pin).trim() : DEFAULT_DB.admin_pin,
+      };
     } else if (fs.existsSync(SEED_FILE)) {
       const content = fs.readFileSync(SEED_FILE, "utf-8");
-      return { ...DEFAULT_DB, ...JSON.parse(content) };
+      const parsed = JSON.parse(content);
+      return {
+        ...DEFAULT_DB,
+        ...parsed,
+        admin_pin: parsed.admin_pin ? String(parsed.admin_pin).trim() : DEFAULT_DB.admin_pin,
+      };
     }
   } catch (err) {
     console.warn("Error reading local db file:", err);
@@ -167,6 +178,7 @@ export async function getDb(): Promise<SalonDatabase> {
           const loaded: SalonDatabase = {
             ...DEFAULT_DB,
             ...val,
+            admin_pin: val.admin_pin ? String(val.admin_pin).trim() : DEFAULT_DB.admin_pin,
             bookings: Array.isArray(val.bookings) ? val.bookings : [],
             day_settings: val.day_settings || {},
             announcements: Array.isArray(val.announcements) ? val.announcements : [],
@@ -227,4 +239,4 @@ export async function saveDb(data: SalonDatabase): Promise<void> {
   writeLocalDb(data);
 }
 
-export const MAX_CAPACITY = 10;
+export const MAX_CAPACITY = TIME_SLOTS.length;
